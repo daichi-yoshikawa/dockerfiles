@@ -1,7 +1,11 @@
+# When setting up host PC, launch this docker image with option
+# of "--network=host".
+
 FROM ubuntu:18.04
 ARG user=ansible
 ARG user_password=ansible
 ARG root_password=root
+ARG playbook_url=https://github.com/daichi-yoshikawa/ansible_playbooks
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -23,6 +27,9 @@ RUN sudo apt-add-repository -y --update ppa:ansible/ansible && \
       openssh-client \
       openssh-server \
       vim
+
+WORKDIR /home/$user
+RUN git clone $playbook_url
 
 USER root
 RUN rm /etc/sudoers.d/$user
