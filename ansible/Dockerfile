@@ -5,7 +5,8 @@ FROM ubuntu:18.04
 ARG user=ansible
 ARG user_password=ansible
 ARG root_password=root
-ARG playbook_url=https://github.com/daichi-yoshikawa/ansible_playbooks
+ARG ssh_pub_key=.ssh/id_rsa_ansible.pub
+ARG ssh_pri_key=.ssh/id_rsa_ansible
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -17,6 +18,7 @@ RUN apt-get update && \
     echo "$user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$user
 
 USER $user
+WORKDIR /home/$user
 RUN sudo apt-add-repository -y --update ppa:ansible/ansible && \
     sudo apt-get install -y --no-install-recommends \
       ansible \
@@ -28,13 +30,10 @@ RUN sudo apt-add-repository -y --update ppa:ansible/ansible && \
       openssh-server \
       vim
 
-WORKDIR /home/$user
-RUN git clone $playbook_url
 RUN mkdir .ssh && chmod 700 .ssh
+COPY $ssh_pub_key .ssh/id_rsa_ansible.pub
+COPY $ssh_pri_key .ssh/id_rsa_ansible
 
-USER root
-RUN rm /etc/sudoers.d/$user
-ENV USER_=$user
-
+RUN sudo rm /etc/sudoers.d/$user
 EXPOSE 22
-CMD ssh-keygen -t rsa -b 4096 -N "$(date)" -f .ssh/id_rsa_ansible && service ssh start && su - ${USER_} && /bin/bash
+CMD /bin/bash
