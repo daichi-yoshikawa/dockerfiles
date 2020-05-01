@@ -1,9 +1,13 @@
 # Usage
 
 ## Step 1
-In the host machine, generate ssh key for ansible server as below.
+In the host machine, generate ssh keys for ansible server as below. The generated keys are shared by this docker container via mounted volume.
 ```
 ssh-keygen -t rsa -b 4096 -N "$(date)" -f <some-directory>/.ssh/id_rsa_ansible
+```
+For example,
+```
+ssh-keygen -t rsa -b 4096 -N "$(date)" -f /home/user_on_host/tmp/.ssh/id_rsa_ansible
 ```
 <some-directory> is not necessarily home directory, especially in case of
 that you don't like to share keys between the host machine and the docker container.
@@ -12,12 +16,17 @@ that you don't like to share keys between the host machine and the docker contai
 In the host machine, become root user and run as below.
 ```
 sudo su
-docker run -it ansible
+docker run -v <full-path-to-ssh-dir>:/home/<username of docker>/.ssh -it ansible
 ```
+For example, the above will be like below(Default username is "ansible").
+```
+docker run -v /home/user_on_host/tmp/.ssh:/home/ansible/.ssh -it ansible
+```
+
 If you need to put docker container in the same network as
 the host machine's, you can do as below.
 ```
-docker run --network=host -it ansible
+docker run -v <full-path-to-ssh-dir>:/home/username of docker>/.ssh --network=host -it ansible
 ```
 
 ## Step 3
