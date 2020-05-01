@@ -5,8 +5,6 @@ FROM ubuntu:18.04
 ARG user=ansible
 ARG user_password=ansible
 ARG root_password=root
-ARG ssh_pub_key=.ssh/id_rsa_ansible.pub
-ARG ssh_pri_key=.ssh/id_rsa_ansible
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -31,8 +29,7 @@ RUN sudo apt-add-repository -y --update ppa:ansible/ansible && \
       vim
 
 RUN mkdir .ssh && chmod 700 .ssh
-COPY $ssh_pub_key .ssh/id_rsa_ansible.pub
-COPY $ssh_pri_key .ssh/id_rsa_ansible
+VOLUME /home/$user/.ssh
 
 RUN sudo rm /etc/sudoers.d/$user
 EXPOSE 22
