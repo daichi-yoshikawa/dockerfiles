@@ -30,10 +30,11 @@ RUN sudo apt-add-repository -y --update ppa:ansible/ansible && \
 
 WORKDIR /home/$user
 RUN git clone $playbook_url
+RUN mkdir .ssh && chmod 700 .ssh
 
 USER root
 RUN rm /etc/sudoers.d/$user
 ENV USER_=$user
 
 EXPOSE 22
-CMD service ssh start && su - ${USER_} && /bin/bash
+CMD ssh-keygen -t rsa -b 4096 -N "$(date)" -f .ssh/id_rsa_ansible && service ssh start && su - ${USER_} && /bin/bash
