@@ -1,8 +1,6 @@
 FROM nginx:1.18.0
 
-ARG user=webapp
-ARG user_password=webapp
-ARG root_password=root
+ARG file_src_url=https://github.com/daichi-yoshikawa/dockerfiles/nginx
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -17,9 +15,9 @@ WORKDIR /etc/nginx
 RUN mv nginx.conf nginx.conf.bak && \
     mv conf.d/default.conf conf.d/default.conf.bak
 
-COPY nginx.conf nginx.conf
-COPY events_10_basic.conf conf.d/events_10_basic.conf
-COPY http_10_basic.conf conf.d/http_10_basic.conf
+ADD $file_src_url/nginx.conf nginx.conf
+ADD $file_src_url/events_10_basic.conf conf.d/events_10_basic.conf
+ADD $file_src_url/http_10_basic.conf conf.d/http_10_basic.conf
 
 WORKDIR /root/app/html
 VOLUME /root/app/html
