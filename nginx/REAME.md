@@ -1,0 +1,1 @@
+docer run -v <path-to-log>:/var/log/nginx <path-to-html>:/app -it nginx
