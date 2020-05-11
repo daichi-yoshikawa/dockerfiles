@@ -1,6 +1,6 @@
 FROM nginx:1.18.0
 
-ARG file_src_url=https://github.com/daichi-yoshikawa/dockerfiles/nginx
+ARG file_src_url=https://github.com/daichi-yoshikawa/dockerfiles//blob/master/nginx
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
