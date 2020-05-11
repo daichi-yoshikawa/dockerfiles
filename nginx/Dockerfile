@@ -1,35 +1,28 @@
 FROM nginx:1.18.0
 
-ARG user=webapp
-ARG user_password=webapp
 ARG root_password=root
+ARG home=/root
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+            apt-utils \
             software-properties-common \
-	    sudo && \
-    useradd -ms /bin/bash -g sudo $user && \
-    echo "root:$root_password" | chpasswd && \
-    echo "$user:$user_password" | chpasswd && \
-    echo "$user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$user
-
-USER $user
-WORKDIR /home/$user
-RUN sudo apt-get install -y --no-install-recommends \
             iputils-ping \
 	    less \
 	    net-tools \
             openssh-server \
             software-properties-common \
-            vim
+            vim && \
+    echo "root:$root_password" | chpasswd
 
-VOLUME app
+VOLUME /usr/share/nginx/html
 VOLUME /var/log/nginx
 
-USER root
-RUN rm /etc/sudoers.d/$user && \
-    mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.bak
-COPY default.conf /etc/nginx/conf.d/default.conf
+WORKDIR /etc/nginx
+RUN cp nginx.conf nginx.conf.bak && \
+    cp conf.d/default.conf conf.d/default.conf.bak
+
+WORKDIR $home
 
 EXPOSE 22 80 443
-CMD systemctl start ssh && systemctl start nginx && /bin/bash
+CMD service ssh start && service nginx start && /bin/bash
