@@ -2,6 +2,7 @@ FROM nginx:1.18.0
 
 ARG root_password=root
 ARG home=/root
+ARG root=/root/app
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -15,7 +16,8 @@ RUN apt-get update && \
             vim && \
     echo "root:$root_password" | chpasswd
 
-VOLUME /usr/share/nginx/html
+WORKDIR $root
+VOLUME $root
 VOLUME /var/log/nginx
 
 WORKDIR /etc/nginx
