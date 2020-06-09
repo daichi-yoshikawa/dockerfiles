@@ -8,7 +8,7 @@ ARG root_password=root
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      software-properties-common \        
+      software-properties-common \
       sudo && \
     useradd -ms /bin/bash -g sudo $user && \
     echo "root:$root_password" | chpasswd && \
@@ -28,8 +28,16 @@ RUN sudo apt-add-repository -y --update ppa:ansible/ansible && \
       openssh-server \
       vim
 
-RUN mkdir .ssh && chmod 700 .ssh
-VOLUME /home/$user/.ssh
+USER root
+RUN sudo echo '    StrictHostKeyChecking no' >> /etc/ssh/ssh_config
+USER $user
+
+WORKDIR /home/$user/playbooks
+VOLUME /home/$user/playbooks
+
+WORKDIR /home/$user
+RUN echo '[defaults]' >> .ansible.cfg && \
+    echo 'host_key_checking = False' >> .ansible.cfg
 
 RUN sudo rm /etc/sudoers.d/$user
 EXPOSE 22
