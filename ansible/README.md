@@ -16,17 +16,17 @@ that you don't like to share keys between the host machine and the docker contai
 In the host machine, become root user and run as below.
 ```
 sudo su
-docker run -v <full-path-to-ssh-dir>:/home/<username of docker>/.ssh -it ansible
+docker run -v <full-path-to-ssh-dir>:/home/<username of docker>/.ssh -v <full-path-to-root-of-playbook>:/home/<username of docker>/playbooks -it ansible
 ```
 For example, the above will be like below(Default username is "ansible").
 ```
-docker run -v /home/user_on_host/tmp/.ssh:/home/ansible/.ssh -it ansible
+docker run -v /home/user_on_host/tmp/.ssh:/home/ansible/.ssh -v /home/user_on_host/work/playbooks/my-web-server:/home/ansible/playbooks -it ansible
 ```
 
 If you need to put docker container in the same network as
 the host machine's, you can do as below.
 ```
-docker run -v <full-path-to-ssh-dir>:/home/username of docker>/.ssh --network=host -it ansible
+docker run -v <full-path-to-ssh-dir>:/home/username of docker>/.ssh -v <full-path-to-root-of-playbook>:/home/<username of docker>/playbooks --network=host -it ansible
 ```
 
 ## Step 3
@@ -94,8 +94,48 @@ Test ssh login from ansible to the host machine. In ansible server,
 ```
 ssh -p <port you use for ssh> -i <path-to-.ssh>/<private key> <username of host>@<ip address>
 ```
-Example)
+Example1)
 ```
 ssh -p 22 -i ~/.ssh/id_rsa_ansible user_on_host@10.1.0.10
 ```
 Note: Here you need to specify private key, not public key.
+
+## Tips
+### Working with Vagrant virtual machine
+You may want to use virtual machine as remote server to test your ansible scripts. In such a case, you need to be careful of way to point IP address of the virtual machine. Assuming that virtual machine is launched based on the following config, ...
+```
+...
+config.vm.box = "bento/ubuntu-18.04"
+config.ssh.password = "vagrant"
+config.ssh.forward_agent = true
+config.vm.define :node1 do |node1|
+  node1.vm.hostname = "test"
+  node1.vm.network :forwarded_port, guest:22, host:10022
+  node1.vm.network :private_network, ip: "192.168.10.1"
+...
+```
+... and launch virtual machine.
+```
+vagrant up
+```
+If you've already launched virtual machine(s) and would like to start everything over, the below may help.
+```
+vagrant halt && vagrant destroy -f && vagrant up
+```
+
+With those configuration, hosts file will be like below.
+```
+<any name you like> ansible_ssh_host=192.168.10.1 ansible_ssh_port=10022 ansible_ssh_user=vagrant ansible_ssh_private_key_file=<full-path-to-private-key on host pc(ansible server)>
+```
+
+If it fails with error message like "Permission Denied", you can try the follows.
+* Typo?
+* Port settings are corresponding?
+* Did you correctly run docker container with "--network=host"?
+* Re-try with ansible_ssh_host=127.0.0.1?
+* Is there "authorized_keys" file, which is a file renamed from public key(Not private key) associated with the ansible server?
+* Check permissions of public key and private key. You can check permissions by ls -la. Both are usually 600. So try "chmod 600 <public key or private key>".
+
+
+
+
