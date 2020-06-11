@@ -31,5 +31,5 @@ VOLUME /var/log/nginx
 VOLUME /etc/nginx/conf.d
 
 WORKDIR $home
-EXPOSE 22 80
+EXPOSE 22 80 8080
 CMD service ssh start && service nginx start && /bin/bash
