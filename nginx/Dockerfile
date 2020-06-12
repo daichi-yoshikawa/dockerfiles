@@ -6,10 +6,12 @@ ARG home=/root
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
             apt-utils \
-            software-properties-common \
+            git \
             iputils-ping \
             less \
+            lsof \
             net-tools \
+            openssh-client \
             openssh-server \
             software-properties-common \
             vim && \
@@ -31,5 +33,5 @@ VOLUME /var/log/nginx
 VOLUME /etc/nginx/conf.d
 
 WORKDIR $home
-EXPOSE 22 80 8080
+EXPOSE 22 80 443
 CMD service ssh start && service nginx start && /bin/bash
