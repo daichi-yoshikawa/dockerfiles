@@ -91,5 +91,8 @@ RUN echo '    StrictHostkeychecking no' >> /etc/ssh/ssh_config
 USER $user
 WORKDIR $HOME
 ENV USER $user
+RUN /bin/bash -c "declare -p > .env.sh" && \
+    echo 'source $HOME/.env.sh' >> $HOME/.bashrc && \
+    echo 'export TERM=xterm-256color' >> $HOME/.bashrc
 EXPOSE 22 8888
-CMD sudo service ssh start && sudo rm /etc/sudoers.d/$USER && /bin/bash -c "declare -p > env.sh" && /bin/bash && cd $HOME/work && jupyter lab --allow-root --ip=0.0.0.0 --no-browser
+CMD sudo service ssh start && sudo rm /etc/sudoers.d/$USER && /bin/bash && jupyter lab --allow-root --ip=0.0.0.0 --no-browser
