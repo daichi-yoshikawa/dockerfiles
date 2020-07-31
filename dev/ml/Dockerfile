@@ -1,15 +1,18 @@
 #######################################################################
 # Usage :
 # $ cd <path to root dir of python Machine Learning project>
-# $ docker run -it --gpus all --network host --build-arg ssh_port=22222 --build-arg jupyterlab_port=28888 -v $(pwd):/home/ubuntu/work/project da1dock/devml
+# $ docker run -it --gpus all -p <ssh port in host>:22 -p <jupyter lab port in host>:8888 -v $(pwd):/home/ubuntu/work/project da1dock/devml
+# Eg.
+# $ docker run -it --gpus all -p 22222:22 -p 28888:8888 -v $(pwd):/home/ubuntu da1dock/devml
+# With the above example,
+# you can ssh login docker container by "ssh -p 22222 ubuntu@127.0.0.1",
+# and use jupyter lab with URL of "localhost:28888" in browser.
 #######################################################################
 
 FROM nvidia/cuda:10.1-devel
 ARG root_password=root
 ARG user=ubuntu
 ARG user_password=ubuntu
-ARG ssh_port=22
-ARG jupyterlab_port=8888
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -22,17 +25,19 @@ RUN apt-get update && \
     echo "$user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$user
 
 USER $user
-ENV home /home/$user
-WORKDIR $home
+ENV HOME /home/$user
+WORKDIR $HOME
 RUN sudo chmod a+rw . && \
     sudo add-apt-repository ppa:kelleyk/emacs && \
     sudo apt-get update && \
     sudo apt-get install -y --no-install-recommends \
-      build-essential=12.4ubuntu1 \
+      apt-utils \
+      build-essential \
       emacs26 \
-      git=1:2.17.1-1ubuntu0.7 \
+      git \
       less \
-      libblas-dev=3.7.1-4ubuntu1 \
+      libblas-dev \
+      lsof \
       openssh-server \
       unzip \
       vim \
@@ -41,15 +46,15 @@ RUN git clone git://github.com/daichi-yoshikawa/dotemacs .emacs.d
 
 # Set cuda path.
 USER $user
-WORKDIR $home
+WORKDIR $HOME
 ENV CUDA_ROOT /usr/local/cuda
 ENV PATH $CUDA_ROOT/bin:$PATH
 ENV LD_LIBRARY_PATH=$CUDA_ROOT/lib64:$LD_LIBRARY_PATH
 
 # Set up python virtualenv.
 USER $user
-WORKDIR $home
-ENV PYENV_ROOT $home/.pyenv
+WORKDIR $HOME
+ENV PYENV_ROOT $HOME/.pyenv
 ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 RUN sudo apt-get install -y --no-install-recommends \
       gcc \
@@ -63,13 +68,13 @@ RUN sudo apt-get install -y --no-install-recommends \
       zlib1g-dev
 RUN git clone git://github.com/yyuu/pyenv.git .pyenv && \
     mkdir -p .pyenv/versions .pyenv/shims
-RUN git clone git://github.com/yyuu/pyenv-virtualenv.git /home/$user/.pyenv/plugins/pyenv-virtualenv && \
+RUN git clone git://github.com/yyuu/pyenv-virtualenv.git $HOME/.pyenv/plugins/pyenv-virtualenv && \
     pyenv install 3.8.3 && \
     pyenv virtualenv 3.8.3 py383
 
 # pip install python packages
-WORKDIR $home
-RUN sudo $home/.pyenv/bin/pyenv local py383 && \
+WORKDIR $HOME
+RUN sudo $HOME/.pyenv/bin/pyenv local py383 && \
     pip install --upgrade pip
 RUN pip install numpy==1.19.1 pandas==1.1.0 matplotlib==3.3.0 seaborn==0.10.1 jupyterlab==2.2.2 plotly==4.9.0 bokeh==2.1.1
 RUN pip install tensorflow==2.3.0 keras==2.4.3 keras-rl==0.4.2
@@ -78,22 +83,10 @@ RUN pip install nltk==3.5 spacy==2.3.2
 RUN pip install xgboost==1.1.1 scikit-learn==0.23.1 scipy==1.4.1 cupy-cuda101==7.7.0 statsmodels==0.11.1
 
 USER root
-RUN echo '    StrictHostkeychecking no' >> /etc/ssh/ssh_config &&\
-    echo "    Port $ssh_port" >> /etc/ssh/ssh_config
+RUN echo '    StrictHostkeychecking no' >> /etc/ssh/ssh_config
 
 USER $user
-#RUN sudo rm /etc/sudoers.d/$user
-WORKDIR $home
-EXPOSE $ssh_port $jupyterlab_port
-ENV JUPYTERLAB_PORT=$jupyterlab_port
-CMD sudo service ssh start && /bin/bash
-#CMD /bin/bash
-#EXPOSE $ssh_port $jupyterlab_port
-#ENV JUPYTERLAB_PORT=$jupyterlab_port
-#CMD service ssh start && su - ubuntu && /bin/bash && cd
-
-#USER $user
-#WORKDIR /home/$user
-#RUN sudo rm /etc/sudoers.d/$user
-#EXPOSE 22
-#CMD /bin/bash
+WORKDIR $HOME
+ENV USER $user
+EXPOSE 22 8888
+CMD sudo service ssh start && sudo rm /etc/sudoers.d/$USER && jupyter lab --allow-root --ip=0.0.0.0 --no-browser && /bin/bash
