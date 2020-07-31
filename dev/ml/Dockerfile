@@ -3,13 +3,15 @@
 # $ cd <path to root dir of python Machine Learning project>
 # $ docker run -it --gpus all -p <ssh port in host>:22 -p <jupyter lab port in host>:8888 -v $(pwd):/home/ubuntu/work/project da1dock/devml
 # Eg.
-# $ docker run -it --gpus all -p 22222:22 -p 28888:8888 -v $(pwd):/home/ubuntu da1dock/devml
+# $ docker run -it --gpus all -p 22222:22 -p 28888:8888 -v $(pwd):/home/ubuntu/work da1dock/dev-ml
 # With the above example,
 # you can ssh login docker container by "ssh -p 22222 ubuntu@127.0.0.1",
 # and use jupyter lab with URL of "localhost:28888" in browser.
+# When doing ssh login, execute "$ source env.sh" to setup environmental
+# variables properly before doing anything.
 #######################################################################
 
-FROM nvidia/cuda:10.1-devel
+FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 ARG root_password=root
 ARG user=ubuntu
 ARG user_password=ubuntu
@@ -58,13 +60,14 @@ ENV PYENV_ROOT $HOME/.pyenv
 ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 RUN sudo apt-get install -y --no-install-recommends \
       gcc \
-      make \
-      openssl \
-      libffi-dev \
-      libssl-dev \
       libbz2-dev \
+      libffi-dev \
+      liblzma-dev \
       libreadline-dev \
       libsqlite3-dev \
+      libssl-dev \
+      make \
+      openssl \
       zlib1g-dev
 RUN git clone git://github.com/yyuu/pyenv.git .pyenv && \
     mkdir -p .pyenv/versions .pyenv/shims
@@ -89,4 +92,4 @@ USER $user
 WORKDIR $HOME
 ENV USER $user
 EXPOSE 22 8888
-CMD sudo service ssh start && sudo rm /etc/sudoers.d/$USER && /bin/bash && cd $HOME/work && jupyter lab --allow-root --ip=0.0.0.0 --no-browser
+CMD sudo service ssh start && sudo rm /etc/sudoers.d/$USER && /bin/bash -c "declare -p > env.sh" && /bin/bash && cd $HOME/work && jupyter lab --allow-root --ip=0.0.0.0 --no-browser
