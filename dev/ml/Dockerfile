@@ -73,7 +73,7 @@ RUN git clone git://github.com/yyuu/pyenv-virtualenv.git $HOME/.pyenv/plugins/py
     pyenv virtualenv 3.8.3 py383
 
 # pip install python packages
-WORKDIR $HOME
+WORKDIR $HOME/work
 RUN sudo $HOME/.pyenv/bin/pyenv local py383 && \
     pip install --upgrade pip
 RUN pip install numpy==1.19.1 pandas==1.1.0 matplotlib==3.3.0 seaborn==0.10.1 jupyterlab==2.2.2 plotly==4.9.0 bokeh==2.1.1
@@ -89,4 +89,4 @@ USER $user
 WORKDIR $HOME
 ENV USER $user
 EXPOSE 22 8888
-CMD sudo service ssh start && sudo rm /etc/sudoers.d/$USER && jupyter lab --allow-root --ip=0.0.0.0 --no-browser && /bin/bash
+CMD sudo service ssh start && sudo rm /etc/sudoers.d/$USER && /bin/bash && cd $HOME/work && jupyter lab --allow-root --ip=0.0.0.0 --no-browser
