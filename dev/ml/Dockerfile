@@ -96,4 +96,4 @@ RUN /bin/bash -c "declare -p > .env.sh" && \
     echo 'export TERM=xterm-256color' >> $HOME/.bashrc
 EXPOSE 22 8888
 WORKDIR $HOME/work
-CMD sudo service ssh start && sudo rm /etc/sudoers.d/$USER && /bin/bash && jupyter lab --allow-root --ip=0.0.0.0 --no-browser
+CMD sudo service ssh start && sudo rm /etc/sudoers.d/$USER && /bin/bash -c "jupyter lab --allow-root --ip=0.0.0.0 --no-browser &" && /bin/bash
